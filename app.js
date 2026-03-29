@@ -176,8 +176,10 @@ function setRiskMode(mode) {
   STATE.riskMode = mode;
   document.getElementById('btnPct').classList.toggle('active', mode === 'pct');
   document.getElementById('btnFixed').classList.toggle('active', mode === 'fixed');
+  document.getElementById('btnManual').classList.toggle('active', mode === 'manual');
   document.getElementById('riskPctGroup').classList.toggle('hidden', mode !== 'pct');
   document.getElementById('riskFixedGroup').classList.toggle('hidden', mode !== 'fixed');
+  document.getElementById('riskManualGroup').classList.toggle('hidden', mode !== 'manual');
   calculate();
 }
 
@@ -191,6 +193,15 @@ function setRisk(val) {
 function setFixedRisk(val) {
   document.getElementById('riskFixed').value = val;
   document.querySelectorAll('#riskFixedGroup .qbtn').forEach(b => b.classList.remove('active-q'));
+  event.target.classList.add('active-q');
+  calculate();
+}
+
+function setManualLot(val) {
+  document.getElementById('manualLot').value = val;
+  document.getElementById('manualLotSlider').value = val;
+  document.getElementById('manualLotLabel').innerText = val;
+  document.querySelectorAll('#riskManualGroup .qbtn').forEach(b => b.classList.remove('active-q'));
   event.target.classList.add('active-q');
   calculate();
 }
@@ -218,15 +229,6 @@ function calculate() {
   if (!entry || !sl || isNaN(entry) || isNaN(sl)) return;
   if (entry === sl) { showWarning('Entry and Stop Loss cannot be the same price.'); return; }
 
-  // ── Risk Amount ──────────────────────────────────────
-  let riskAmount;
-  if (STATE.riskMode === 'pct') {
-    const pct = parseFloat(document.getElementById('riskPct').value) || 1;
-    riskAmount = balance * (pct / 100);
-  } else {
-    riskAmount = parseFloat(document.getElementById('riskFixed').value) || 50;
-  }
-
   // ── Pip Distances ────────────────────────────────────
   // For XAUUSD, price moves in USD. Distance in pips = (price diff) / pip_size
   const slDistance   = Math.abs(entry - sl);    // in USD/oz
@@ -242,12 +244,28 @@ function calculate() {
     return;
   }
 
-  // ── Lot Size Calculation ─────────────────────────────
-  // Lot Size = Risk$ / (SL_pips × pip_value_per_lot)
-  const rawLots = riskAmount / (slPips * XAUUSD.pip_value_per_lot);
-  const lots    = roundLots(rawLots);
+  // ── Risk & Lot Size Calculation ──────────────────────
+  let riskAmount;
+  let rawLots;
+  let lots;
 
-  if (lots < XAUUSD.min_lot) {
+  if (STATE.riskMode === 'pct') {
+    const pct = parseFloat(document.getElementById('riskPct').value) || 1;
+    riskAmount = balance * (pct / 100);
+    rawLots = riskAmount / (slPips * XAUUSD.pip_value_per_lot);
+    lots = roundLots(rawLots);
+  } else if (STATE.riskMode === 'fixed') {
+    riskAmount = parseFloat(document.getElementById('riskFixed').value) || 50;
+    rawLots = riskAmount / (slPips * XAUUSD.pip_value_per_lot);
+    lots = roundLots(rawLots);
+  } else if (STATE.riskMode === 'manual') {
+    lots = parseFloat(document.getElementById('manualLot').value) || 0.01;
+    rawLots = lots;
+    // Reverse calculate risk from explicit lot size
+    riskAmount = lots * slPips * XAUUSD.pip_value_per_lot;
+  }
+
+  if (STATE.riskMode !== 'manual' && lots < XAUUSD.min_lot) {
     showWarning(`Calculated lot size (${rawLots.toFixed(4)}) is below the minimum (0.01). Increase risk or widen SL.`);
     return;
   }

@@ -122,8 +122,9 @@
         <div class="input-group">
           <label>Risk Mode</label>
           <div class="toggle-group" id="riskModeToggle">
-            <button class="toggle-btn active" id="btnPct" onclick="setRiskMode('pct')">% of Account</button>
-            <button class="toggle-btn" id="btnFixed" onclick="setRiskMode('fixed')">Fixed $</button>
+            <button class="toggle-btn active" id="btnPct" onclick="setRiskMode('pct')">% Risk</button>
+            <button class="toggle-btn" id="btnFixed" onclick="setRiskMode('fixed')">$ Risk</button>
+            <button class="toggle-btn" id="btnManual" onclick="setRiskMode('manual')">Lot Size</button>
           </div>
         </div>
 
@@ -152,6 +153,21 @@
             <button class="qbtn" onclick="setFixedRisk(50)">$50</button>
             <button class="qbtn" onclick="setFixedRisk(100)">$100</button>
             <button class="qbtn" onclick="setFixedRisk(200)">$200</button>
+          </div>
+        </div>
+
+        <div class="input-group hidden" id="riskManualGroup">
+          <label for="manualLot">Manual Lot Size (<span id="manualLotLabel">0.01</span>)</label>
+          <input type="range" id="manualLotSlider" value="0.01" min="0.01" max="10.00" step="0.01" oninput="document.getElementById('manualLot').value = this.value; document.getElementById('manualLotLabel').innerText = this.value; calculate()" style="width:100%; margin-bottom: 8px; cursor: pointer; accent-color: var(--gold-500);" />
+          <div class="input-suffix-wrap">
+            <input type="number" id="manualLot" value="0.01" min="0.01" step="0.01" oninput="document.getElementById('manualLotSlider').value = this.value; document.getElementById('manualLotLabel').innerText = this.value; calculate()" />
+            <span class="suffix">Lots</span>
+          </div>
+          <div class="quick-btns">
+            <button class="qbtn active-q" onclick="setManualLot(0.01)">0.01</button>
+            <button class="qbtn" onclick="setManualLot(0.1)">0.10</button>
+            <button class="qbtn" onclick="setManualLot(0.5)">0.50</button>
+            <button class="qbtn" onclick="setManualLot(1.0)">1.00</button>
           </div>
         </div>
 
