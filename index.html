@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GuruG GoldTrader — XAUUSD Trading Calculator & Journal</title>
+  <meta name="description" content="Professional XAUUSD trading calculator for MT5. Calculate lot size, risk:reward, pip value and log your trades." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ───────────────── HEADER ───────────────── -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">⚡</span>
+        <div>
+          <span class="logo-title">GuruG <span class="gold">GoldTrader</span></span>
+          <span class="logo-sub">XAUUSD · MT5 · USD Account</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="live-price" id="livePrice">
+          <span class="live-dot"></span>
+          <span class="price-label">XAUUSD</span>
+          <span class="price-value" id="priceDisplay">—</span>
+        </div>
+        <div class="account-pill">
+          <span>Balance</span>
+          <span class="gold" id="headerBalance">$5,000.00</span>
+        </div>
+      </div>
+    </div>
+    <!-- Tab bar -->
+    <nav class="tab-bar">
+      <button class="tab active" id="tabCalc" onclick="switchTab('calc')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+        Calculator
+      </button>
+      <button class="tab" id="tabJournal" onclick="switchTab('journal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        Trade Journal
+        <span class="tab-badge" id="journalBadge">0</span>
+      </button>
+      <button class="tab" id="tabInr" onclick="switchTab('inr')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 7h8M8 12h8M8 17l4-5h4"/></svg>
+        Gold → INR
+        <span class="inr-badge">🇮🇳</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- ───────────────── CALCULATOR TAB ───────────────── -->
+  <main id="pageCal" class="page active">
+
+    <!-- ── LIVE GOLD TICKER ─────────────────────────────── -->
+    <div class="live-ticker" id="liveTicker">
+      <!-- Left: Symbol -->
+      <div class="ticker-left">
+        <div class="ticker-symbol-wrap">
+          <span class="ticker-symbol">XAU/USD</span>
+          <span class="ticker-asset-name">Spot Gold</span>
+        </div>
+        <div class="ticker-live-badge" id="tickerLiveBadge">
+          <span class="live-dot" id="tickerDot" style="width:8px;height:8px"></span>
+          LIVE
+        </div>
+      </div>
+
+      <!-- Center: Price + Change -->
+      <div class="ticker-center">
+        <span class="ticker-price" id="tickerPrice">—</span>
+        <div class="ticker-change-wrap">
+          <span class="ticker-change" id="tickerChange">—</span>
+          <span class="ticker-pct" id="tickerPct">—</span>
+        </div>
+      </div>
+
+      <!-- Right: Mini stats + refresh -->
+      <div class="ticker-right">
+        <div class="ticker-stats">
+          <div class="ticker-stat">
+            <span class="ts-label">Session High</span>
+            <span class="ts-val green" id="tickerHigh">—</span>
+          </div>
+          <div class="ticker-stat">
+            <span class="ts-label">Session Low</span>
+            <span class="ts-val red" id="tickerLow">—</span>
+          </div>
+          <div class="ticker-stat">
+            <span class="ts-label">Updated</span>
+            <span class="ts-val" id="tickerTime">—</span>
+          </div>
+        </div>
+        <button class="ticker-refresh-btn" id="tickerRefreshBtn" onclick="fetchGoldPrice()" title="Refresh gold price">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="calc-grid">
+
+      <!-- LEFT: ACCOUNT + INPUTS -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-icon">💼</span>
+          <h2>Account & Setup</h2>
+        </div>
+
+        <!-- Account Settings -->
+        <div class="section-label">Account Settings</div>
+        <div class="input-group">
+          <label for="accountBalance">Account Balance (USD)</label>
+          <div class="input-prefix-wrap">
+            <span class="prefix">$</span>
+            <input type="number" id="accountBalance" value="5000" min="1" step="100" oninput="calculate()" />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Risk Mode</label>
+          <div class="toggle-group" id="riskModeToggle">
+            <button class="toggle-btn active" id="btnPct" onclick="setRiskMode('pct')">% of Account</button>
+            <button class="toggle-btn" id="btnFixed" onclick="setRiskMode('fixed')">Fixed $</button>
+          </div>
+        </div>
+
+        <div class="input-group" id="riskPctGroup">
+          <label for="riskPct">Risk Percentage</label>
+          <div class="input-suffix-wrap">
+            <input type="number" id="riskPct" value="1" min="0.1" max="100" step="0.1" oninput="calculate()" />
+            <span class="suffix">%</span>
+          </div>
+          <div class="quick-btns">
+            <button class="qbtn" onclick="setRisk(0.5)">0.5%</button>
+            <button class="qbtn active-q" onclick="setRisk(1)">1%</button>
+            <button class="qbtn" onclick="setRisk(1.5)">1.5%</button>
+            <button class="qbtn" onclick="setRisk(2)">2%</button>
+          </div>
+        </div>
+
+        <div class="input-group hidden" id="riskFixedGroup">
+          <label for="riskFixed">Fixed Risk Amount</label>
+          <div class="input-prefix-wrap">
+            <span class="prefix">$</span>
+            <input type="number" id="riskFixed" value="50" min="1" step="5" oninput="calculate()" />
+          </div>
+          <div class="quick-btns">
+            <button class="qbtn" onclick="setFixedRisk(25)">$25</button>
+            <button class="qbtn" onclick="setFixedRisk(50)">$50</button>
+            <button class="qbtn" onclick="setFixedRisk(100)">$100</button>
+            <button class="qbtn" onclick="setFixedRisk(200)">$200</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Trade Setup -->
+        <div class="section-label">Trade Setup · XAUUSD</div>
+
+        <div class="input-group">
+          <label>Direction</label>
+          <div class="toggle-group">
+            <button class="toggle-btn buy-btn active" id="btnBuy" onclick="setDirection('buy')">
+              ▲ BUY / LONG
+            </button>
+            <button class="toggle-btn sell-btn" id="btnSell" onclick="setDirection('sell')">
+              ▼ SELL / SHORT
+            </button>
+          </div>
+        </div>
+
+        <div class="price-inputs">
+          <div class="input-group">
+            <label for="entryPrice">Entry Price</label>
+            <div class="input-prefix-wrap">
+              <span class="prefix gold-text">E</span>
+              <input type="number" id="entryPrice" placeholder="e.g. 2350.00" step="0.01" oninput="calculate()" />
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="stopLoss">Stop Loss</label>
+            <div class="input-prefix-wrap">
+              <span class="prefix red-text">SL</span>
+              <input type="number" id="stopLoss" placeholder="e.g. 2340.00" step="0.01" oninput="calculate()" />
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="takeProfit">Take Profit</label>
+            <div class="input-prefix-wrap">
+              <span class="prefix green-text">TP</span>
+              <input type="number" id="takeProfit" placeholder="e.g. 2370.00" step="0.01" oninput="calculate()" />
+            </div>
+          </div>
+        </div>
+
+        <div class="cta-row">
+          <button class="btn-primary" onclick="calculate()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Calculate
+          </button>
+          <button class="btn-secondary" onclick="clearInputs()">Clear</button>
+          <button class="btn-log" id="logTradeBtn" onclick="openLogModal()" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Log Trade
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT: RESULTS -->
+      <div class="panel results-panel">
+        <div class="panel-header">
+          <span class="panel-icon">📊</span>
+          <h2>Results</h2>
+          <span class="direction-badge" id="directionBadge">—</span>
+        </div>
+
+        <!-- Primary metrics -->
+        <div class="results-grid">
+          <div class="result-card highlight">
+            <div class="result-label">Lot Size</div>
+            <div class="result-value" id="resLotSize">—</div>
+            <div class="result-sub" id="resLotSub">Standard lots</div>
+          </div>
+          <div class="result-card rr-card">
+            <div class="result-label">Risk : Reward</div>
+            <div class="result-value rr-value" id="resRR">—</div>
+            <div class="result-sub" id="resRRSub">ratio</div>
+          </div>
+        </div>
+
+        <!-- Secondary metrics -->
+        <div class="metrics-row">
+          <div class="metric-box">
+            <span class="metric-label">SL Distance</span>
+            <span class="metric-value" id="resSLPips">—</span>
+            <span class="metric-unit">pips</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">TP Distance</span>
+            <span class="metric-value" id="resTPPips">—</span>
+            <span class="metric-unit">pips</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Pip Value</span>
+            <span class="metric-value" id="resPipVal">—</span>
+            <span class="metric-unit">$/pip/lot</span>
+          </div>
+        </div>
+
+        <!-- P&L breakdown -->
+        <div class="pnl-section">
+          <div class="pnl-row">
+            <div class="pnl-box loss">
+              <span class="pnl-label">Max Loss (Risk)</span>
+              <span class="pnl-amount" id="resMaxLoss">—</span>
+              <span class="pnl-pct" id="resMaxLossPct">—</span>
+            </div>
+            <div class="pnl-box profit">
+              <span class="pnl-label">Max Profit</span>
+              <span class="pnl-amount" id="resMaxProfit">—</span>
+              <span class="pnl-pct" id="resMaxProfitPct">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trade levels visualizer -->
+        <div class="levels-section" id="levelsSection" style="display:none">
+          <div class="levels-header">Trade Levels Visualizer</div>
+          <div class="levels-bar-wrap">
+            <div class="levels-bar" id="levelsBar">
+              <div class="level-line tp" id="lvlTP"><span class="lvl-label">TP</span></div>
+              <div class="level-line entry" id="lvlEntry"><span class="lvl-label">Entry</span></div>
+              <div class="level-line sl" id="lvlSL"><span class="lvl-label">SL</span></div>
+            </div>
+          </div>
+          <div class="levels-prices">
+            <span class="lvl-price red" id="lvlSLPrice">—</span>
+            <span class="lvl-price gold" id="lvlEntryPrice">—</span>
+            <span class="lvl-price green" id="lvlTPPrice">—</span>
+          </div>
+        </div>
+
+        <!-- Micro lot breakdown -->
+        <div class="micro-section" id="microSection" style="display:none">
+          <div class="micro-label">Lot Breakdown</div>
+          <div class="micro-boxes" id="microBoxes"></div>
+        </div>
+
+        <!-- Warning -->
+        <div class="warning-box" id="warningBox" style="display:none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span id="warningMsg"></span>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ───────────────── JOURNAL TAB ───────────────── -->
+  <main id="pageJournal" class="page" style="display:none">
+    <div class="journal-layout">
+
+      <!-- Stats bar -->
+      <div class="stats-bar">
+        <div class="stat-card">
+          <span class="stat-label">Total Trades</span>
+          <span class="stat-value" id="statTotal">0</span>
+        </div>
+        <div class="stat-card green-stat">
+          <span class="stat-label">Win Rate</span>
+          <span class="stat-value" id="statWinRate">—</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Net P&L</span>
+          <span class="stat-value" id="statNetPnl">$0.00</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Avg R:R</span>
+          <span class="stat-value" id="statAvgRR">—</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Best Trade</span>
+          <span class="stat-value green" id="statBest">—</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Worst Trade</span>
+          <span class="stat-value red" id="statWorst">—</span>
+        </div>
+      </div>
+
+      <!-- Equity curve (simple bar chart) -->
+      <div class="panel equity-panel">
+        <div class="panel-header">
+          <span class="panel-icon">📈</span>
+          <h2>Equity Curve</h2>
+        </div>
+        <div class="equity-chart" id="equityChart">
+          <div class="empty-chart">No trades logged yet</div>
+        </div>
+      </div>
+
+      <!-- Journal table -->
+      <div class="panel journal-panel">
+        <div class="panel-header">
+          <span class="panel-icon">📓</span>
+          <h2>Trade Log</h2>
+          <div class="journal-actions">
+            <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+            <button class="btn-clear-journal" onclick="clearJournal()">🗑 Clear All</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="trade-table" id="tradeTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Dir</th>
+                <th>Entry</th>
+                <th>SL</th>
+                <th>TP</th>
+                <th>Lots</th>
+                <th>R:R</th>
+                <th>Risk $</th>
+                <th>Outcome</th>
+                <th>P&L ($)</th>
+                <th>Notes</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tradeBody">
+              <tr class="empty-row" id="emptyRow">
+                <td colspan="13">
+                  <div class="empty-state">
+                    <span class="empty-icon">📭</span>
+                    <p>No trades logged yet. Use the Calculator to set up a trade, then click <strong>Log Trade</strong>.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ───────────────── GOLD INR CALCULATOR TAB ───────────────── -->
+  <main id="pageInr" class="page" style="display:none">
+    <div class="inr-layout">
+
+      <!-- Hero label -->
+      <div class="inr-hero">
+        <div class="inr-hero-left">
+          <span class="inr-flag">🇮🇳</span>
+          <div>
+            <h1 class="inr-title">Gold Price Calculator <span class="gold">India</span></h1>
+            <p class="inr-subtitle">XAUUSD → INR · Includes Import Duty &amp; GST</p>
+          </div>
+        </div>
+        <div class="inr-rate-pill" id="inrRatePill">
+          <span class="live-dot" id="inrLiveDot"></span>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="color:var(--text-2);font-size:12px;font-weight:600">USD/INR</span>
+              <span class="inr-rate-val" id="inrRateDisplay">loading…</span>
+            </div>
+            <span style="font-size:10px;color:var(--text-3)" id="inrRateSource">fetching live rate…</span>
+          </div>
+          <button class="btn-refresh" id="inrRefreshBtnHero" onclick="fetchUsdInrRate()" title="Refresh rate" style="margin-left:6px;padding:6px 10px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="inr-grid">
+
+        <!-- INPUT PANEL -->
+        <div class="panel inr-input-panel">
+          <div class="panel-header">
+            <span class="panel-icon">⚙️</span>
+            <h2>Input Parameters</h2>
+          </div>
+
+          <div class="section-label">Market Price</div>
+
+          <div class="input-group">
+            <label for="inrGoldUsd">XAUUSD Price (Troy Ounce in USD)</label>
+            <div class="input-prefix-wrap">
+              <span class="prefix gold-text">$</span>
+              <input type="number" id="inrGoldUsd" placeholder="e.g. 3300.00" step="0.01" oninput="calcInr()" />
+            </div>
+            <div class="quick-btns" style="margin-top:8px">
+              <button class="qbtn" onclick="setInrGoldPrice(3100)">3100</button>
+              <button class="qbtn" onclick="setInrGoldPrice(3300)">3300</button>
+              <button class="qbtn" onclick="setInrGoldPrice(3500)">3500</button>
+              <button class="qbtn" onclick="setInrGoldPrice(4000)">4000</button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Exchange Rate</div>
+
+          <div class="input-group">
+            <label for="inrUsdInrRate">USD → INR Rate</label>
+            <div class="inr-rate-row">
+              <div class="input-prefix-wrap" style="flex:1">
+                <span class="prefix">₹</span>
+                <input type="number" id="inrUsdInrRate" placeholder="e.g. 84.50" step="0.01" oninput="calcInr()" />
+              </div>
+              <button class="btn-refresh" id="inrRefreshBtn" onclick="fetchUsdInrRate()" title="Fetch live rate">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Live
+              </button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Indian Tax Parameters</div>
+
+          <div class="input-group">
+            <label for="inrImportDuty">Import Duty (%)</label>
+            <div class="input-suffix-wrap">
+              <input type="number" id="inrImportDuty" value="6" min="0" max="100" step="0.1" oninput="calcInr()" />
+              <span class="suffix">%</span>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="inrGst">GST (%)</label>
+            <div class="input-suffix-wrap">
+              <input type="number" id="inrGst" value="3" min="0" max="100" step="0.1" oninput="calcInr()" />
+              <span class="suffix">%</span>
+            </div>
+          </div>
+
+          <button class="btn-primary" style="width:100%;margin-top:8px" onclick="calcInr()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Calculate INR Price
+          </button>
+        </div>
+
+        <!-- RESULTS PANEL -->
+        <div class="panel inr-result-panel">
+          <div class="panel-header">
+            <span class="panel-icon">🧮</span>
+            <h2>Step-by-Step Breakdown</h2>
+          </div>
+
+          <!-- Computation waterfall -->
+          <div class="inr-steps" id="inrSteps">
+            <div class="inr-empty">
+              <span style="font-size:36px">🪙</span>
+              <p>Enter a XAUUSD price and USD/INR rate to see the full Indian market gold price calculation.</p>
+            </div>
+          </div>
+
+          <!-- Final price cards -->
+          <div class="inr-final" id="inrFinal" style="display:none">
+            <div class="inr-final-header">Final Price in India</div>
+            <div class="inr-final-grid">
+              <div class="inr-final-card primary-card">
+                <div class="ifc-label">Per 10 Grams (10g)</div>
+                <div class="ifc-value" id="inrPer10g">—</div>
+                <div class="ifc-sub">after Import Duty + GST</div>
+              </div>
+              <div class="inr-final-card">
+                <div class="ifc-label">Per 1 Gram (1g)</div>
+                <div class="ifc-value secondary-val" id="inrPer1g">—</div>
+                <div class="ifc-sub">after Import Duty + GST</div>
+              </div>
+              <div class="inr-final-card">
+                <div class="ifc-label">Per 8 Grams (Tola)</div>
+                <div class="ifc-value secondary-val" id="inrPerTola">—</div>
+                <div class="ifc-sub">traditional Indian weight</div>
+              </div>
+              <div class="inr-final-card">
+                <div class="ifc-label">Per 100 Grams</div>
+                <div class="ifc-value secondary-val" id="inrPer100g">—</div>
+                <div class="ifc-sub">after Import Duty + GST</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ───────────────── LOG TRADE MODAL ───────────────── -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <h3>Log This Trade</h3>
+        <button class="modal-close" onclick="closeLogModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-summary" id="modalSummary"></div>
+
+        <div class="input-group">
+          <label for="tradeOutcome">Outcome</label>
+          <div class="toggle-group">
+            <button class="toggle-btn win-btn" id="outWin" onclick="setOutcome('win')">✅ Win (TP Hit)</button>
+            <button class="toggle-btn loss-btn" id="outLoss" onclick="setOutcome('loss')">❌ Loss (SL Hit)</button>
+            <button class="toggle-btn" id="outBe" onclick="setOutcome('be')">〰 Break Even</button>
+          </div>
+        </div>
+
+        <div class="input-group" id="customPnlGroup" style="display:none">
+          <label for="customPnl">Actual P&L ($) <span class="optional">(if partial / manual close)</span></label>
+          <div class="input-prefix-wrap">
+            <span class="prefix">$</span>
+            <input type="number" id="customPnl" step="0.01" placeholder="Enter actual P&L" />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="tradeNotes">Notes / Tags <span class="optional">(setup, emotions, mistakes…)</span></label>
+          <textarea id="tradeNotes" rows="3" placeholder="e.g. London breakout, followed plan, patience paid off…"></textarea>
+        </div>
+
+        <div class="input-group">
+          <label for="tradeDate">Trade Date</label>
+          <input type="date" id="tradeDate" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeLogModal()">Cancel</button>
+        <button class="btn-primary" onclick="logTrade()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Save Trade
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
