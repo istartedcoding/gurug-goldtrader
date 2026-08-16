@@ -1,49 +1,72 @@
-# GuruG GoldTrader 📈🪙
-**Professional XAUUSD Trading Calculator & Trade Journal for MT5**
+# GuruG GoldTrader 📈
 
-GuruG GoldTrader is a premium, web-based trading calculator and journaling application designed specifically for XAU/USD (Gold) traders utilizing MetaTrader 5 on USD accounts. It simplifies risk management and provides real-time spot gold prices natively without any backend or database setups.
+### XAU/USD Risk Management & Trade Journal for MT5
 
-![GoldTrader Preview](https://via.placeholder.com/800x400.png?text=GuruG+GoldTrader+Preview)
+GuruG GoldTrader is a lightweight browser-based trading utility designed for **XAU/USD traders using MetaTrader 5**. It combines position sizing, risk-to-reward calculations, gold-to-INR conversion and trade journaling in a single interface.
 
-## ✨ Core Features
-- **Live Gold Spot Ticker:** Real-time fetching of XAU/USD prices directly from CORS-friendly internet endpoints. Features session high/low tracking.
-- **Risk to Reward Calculator:** Input your Stop Loss (SL) and Take Profit (TP) to automatically calculate necessary Lot Sizes, Pip Value, and exact USD risk.
-- **Risk Management Profiles:** Choose between risking a fixed percentage (%) of your account balance or a flat dollar amount ($).
-- **Gold → INR Converter:** A dedicated tool for converting Troy Ounces into Indian Gram weights (10g, 1g, Tola) with real-time USD/INR exchange rates, custom Import Duty (%), and GST (%).
-- **Interactive Trade Journal:** Log your calculated setups directly into an internal journal.
-  - Track Win Rate & Net Strategy P&L
-  - Visualize your performance via an Equity Curve Chart
-  - All logs are saved locally directly in your browser (`localStorage`).
-- **Data Export:** Instantly download your full trading history to a nicely formatted `.csv` file.
+The project is intentionally built without a backend or framework, making it easy to run, inspect and adapt.
 
-## 🚀 Live Demo
-You can access the live version of this tool instantly without the need to download anything:
-👉 **[View GuruG GoldTrader Live](https://istartedcoding.github.io/gurug-goldtrader)**
+## Highlights
 
-## 🛠 Tech Stack
-GuruG GoldTrader was purposely built to be universally accessible, lightning-fast, and completely independent of complex frameworks.
-- **HTML5:** Clean, semantic structure.
-- **Vanilla CSS3:** Highly responsive, dark-mode focused UI containing modern CSS pseudo-elements, glass-morphism, and custom variable-based theming.
-- **Vanilla JavaScript:** Zero dependencies. Handles all business logic, local data persistence, algorithmic DOM rendering, and API polling.
+- **Live XAU/USD ticker** with session high/low tracking
+- **Risk-to-reward calculator** for stop-loss and take-profit planning
+- **Position sizing** based on percentage or fixed-dollar risk
+- **Gold → INR conversion** with configurable import duty and GST inputs
+- **Trade journal** with win rate, P&L and equity curve tracking
+- **Local browser storage** using `localStorage`
+- **CSV export** for trade history
+- **Responsive dark-mode interface**
 
-## 📥 Local Installation
-If you wish to modify the calculator or run it completely on your own machine:
+## Live Demo
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/istartedcoding/gurug-goldtrader.git
-   ```
-2. **Open the project directory:**
-   ```bash
-   cd gurug-goldtrader
-   ```
-3. **Run the app:**
-   Simply double-click on `index.html` to open it in your default web browser. No `npm install`, Node.js, or local servers are required!
+**[Open GuruG GoldTrader](https://istartedcoding.github.io/gurug-goldtrader)**
 
-*(Note: While running directly from a `file://` local state, strict browser CORS policies may block live ticker API fetches. To view live prices locally, consider right-clicking `index.html` in VS Code and selecting "Open with Live Server".)*
+## Tech Stack
 
-## 📝 License
-This project is open-source and free to be adapted by traders.
+| Technology | Purpose |
+|---|---|
+| HTML5 | Application structure |
+| CSS3 | Responsive UI and visual design |
+| JavaScript | Calculations, state management and UI logic |
+| Browser APIs | Local persistence and data export |
+| External APIs | Market and currency data |
+
+## Architecture
+
+```text
+Market / Currency APIs
+        ↓
+   JavaScript Logic
+        ↓
+┌───────────────────────┐
+│ Risk Calculator       │
+│ Position Sizing       │
+│ Gold → INR Converter  │
+│ Trade Journal         │
+└───────────────────────┘
+        ↓
+ Browser localStorage
+        ↓
+      CSV Export
+```
+
+## Run Locally
+
+```bash
+git clone https://github.com/istartedcoding/gurug-goldtrader.git
+cd gurug-goldtrader
+```
+
+Open `index.html` in a browser. For live API requests during local development, use a local development server such as VS Code Live Server if required by browser CORS policies.
+
+## Why I Built It
+
+This project started as a practical exercise in turning a trading workflow into a simple, self-contained application. It focuses on **risk management, usability, data handling and client-side automation** without introducing unnecessary infrastructure.
+
+## License
+
+Open source and free to adapt.
 
 ---
-*Built to manage risk. Designed to win.*
+
+Built by **Guru Gowda**.
